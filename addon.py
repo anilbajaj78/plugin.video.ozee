@@ -80,7 +80,7 @@ def episode():
         episode_url = div.find('a')["href"]
         img_src = div.find('img')["src"]
         h.add_dir(addon_handle, base_url, div.find('img')['title'], episode_url, 'show', img_src, img_src)
-'''
+
     pager = soup.find('ul', {'class': lambda x: x and 'pagination' in x.split()})
     
     if pager is not None:
@@ -95,7 +95,7 @@ def episode():
                 h.add_dir(addon_handle, base_url, 'Next >>', nextUrl, 'Movies')
                 break
         h.add_dir(addon_handle, base_url, '<< Home >>', "", '')
-'''
+
 def play_movie():
     url = h.extract_var(args, 'url')
 
