@@ -6,12 +6,40 @@ import json
 import xbmcplugin
 from resources.lib import helpers as h
 
+BASE_URL = "http://www.ozee.com"
+SHOW_URL = BASE_URL + "/shows/all"
+
+Channels = [
+    {'Name' : 'Zee Marathi', 'URL' : SHOW_URL + '/zeemarathi', 'icon_src':'http://akamai.vidz.zeecdn.com/ozee/asset/marathi.jpg', 'Type':'Channel'}, 
+    {'Name' : 'Zee TV', 'URL' : SHOW_URL + '/zeetv', 'icon_src':'http://akamai.vidz.zeecdn.com/ozee/asset/zeetv.jpg', 'Type':'Channel'},
+    {'Name' : '&TV', 'URL' : SHOW_URL + '/andtv', 'icon_src':'http://akamai.vidz.zeecdn.com/ozee/asset/andtv.jpg', 'Type':'Channel'},
+    {'Name' : 'Zindagi', 'URL' : SHOW_URL + '/zindagi', 'icon_src':'http://akamai.vidz.zeecdn.com/ozee/asset/zindagi.jpg', 'Type':'Channel'},
+    {'Name' : 'Movies', 'URL' : BASE_URL + '/movies/all', 'icon_src':'', 'Type':'MovieLanguage'}
+    ]
+
+MoviesLanguages = [
+    {'Language' : 'Hindi', 'URL' : BASE_URL + '/movies/all/hindi'},
+    {'Language' : 'Marathi', 'URL' : BASE_URL + '/movies/all/marathi'}
+    ]
+
+#Channels = json.loads(ChannelJSON)
+#MoviesLanguages = json.loads(MoviesJSON)
+
 def main_branch():
-    h.add_dir(addon_handle, base_url, 'Zee Marathi', "http://www.ozee.com/shows/all/zeemarathi", 'Channel')
-    h.add_dir(addon_handle, base_url, 'Zee TV', "http://www.ozee.com/shows/all/zeetv", 'Channel')
-    h.add_dir(addon_handle, base_url, '& TV', "http://www.ozee.com/shows/all/andtv", 'Channel')
-    h.add_dir(addon_handle, base_url, 'Zindagi', "http://www.ozee.com/shows/all/zindagi", 'Channel')
-    h.add_dir(addon_handle, base_url, 'Movies', "http://www.ozee.com/movies/all", 'Movies')
+    for Channel in Channels:
+        xbmc.log(Channel['Name'])
+        h.add_dir(addon_handle, base_url, Channel["Name"], Channel["URL"], Channel["Type"])
+
+def movie_branch():
+    for Language in MoviesLanguages:
+        h.add_dir(addon_handle, base_url, Language["Language"], Language["URL"], "Movies")
+    
+
+#    h.add_dir(addon_handle, base_url, 'Zee Marathi', "http://www.ozee.com/shows/all/zeemarathi", 'Channel')
+#    h.add_dir(addon_handle, base_url, 'Zee TV', "http://www.ozee.com/shows/all/zeetv", 'Channel')
+#    h.add_dir(addon_handle, base_url, '& TV', "http://www.ozee.com/shows/all/andtv", 'Channel')
+#    h.add_dir(addon_handle, base_url, 'Zindagi', "http://www.ozee.com/shows/all/zindagi", 'Channel')
+#    h.add_dir(addon_handle, base_url, 'Movies', "http://www.ozee.com/movies/all", 'Movies')
 
 def shows_serials():
     url = h.extract_var(args, 'url')
@@ -21,7 +49,7 @@ def shows_serials():
     list = soup.findAll("div", {"class":"thumbnail-with-border-small-title clearfix"})
 
     for div in list:
-        xbmc.log(div.find('a')["href"])
+        xbmc.log(div.find('a')["href"] + "/video")
         title = div.find('div').find('span')["title"]
         img_src = div.find('img')["src"]
         h.add_dir(addon_handle, base_url, title, div.find('a')["href"] + "/video", 'episode', img_src, img_src)
@@ -36,7 +64,8 @@ def shows_serials():
         for pg in pager:
             if (hasattr(pg, "text")) and (pg.text == str(nextPage)):
                 nextUrl = strPage[0] + "?page=" + str(nextPage)
-                h.add_dir(addon_handle, base_url, 'Next >>', nextUrl, 'Movies')
+                xbmc.log("Adding Channel")
+                h.add_dir(addon_handle, base_url, 'Next >>', nextUrl, 'Channel')
                 break
         h.add_dir(addon_handle, base_url, '<< Home >>', "", '')
 
@@ -71,12 +100,13 @@ def shows_movies():
 
 def episode():
     url = h.extract_var(args, 'url')
-
+    xbmc.log("URL : " + url)
     soup = BeautifulSoup(h.make_request(url, cookie_file, cookie_jar))
 
     list = soup.findAll("div", {"class":"col-md-3 col-xs-6 reduce-padding"})
 
     for div in list:
+        xbmc.log("Title : " + div.find('img')['title'])
         episode_url = div.find('a')["href"]
         img_src = div.find('img')["src"]
         h.add_dir(addon_handle, base_url, div.find('img')['title'], episode_url, 'show', img_src, img_src)
@@ -92,7 +122,7 @@ def episode():
         for pg in pager:
             if (hasattr(pg, "text")) and (pg.text == str(nextPage)):
                 nextUrl = strPage[0] + "?page=" + str(nextPage)
-                h.add_dir(addon_handle, base_url, 'Next >>', nextUrl, 'Movies')
+                h.add_dir(addon_handle, base_url, 'Next >>', nextUrl, 'episode')
                 break
         h.add_dir(addon_handle, base_url, '<< Home >>', "", '')
 
@@ -170,6 +200,8 @@ elif mode == 'play':
     play_movie()
 elif mode == 'episode':
     episode()
+elif mode == 'MovieLanguage':
+    movie_branch()
 elif mode == 'not_implemented':
     current_shows()
 else:
