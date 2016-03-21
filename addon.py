@@ -6,176 +6,140 @@ import json
 import xbmcplugin
 from resources.lib import helpers as h
 
-BASE_URL = "http://www.ozee.com"
-SHOW_URL = BASE_URL + "/shows/all"
+currentDisplayCounter = 0
+
+# Version 2.0.0
+
+CHANNEL_BASE_URL = "http://api.android.zeeone.com/mobile/get/shows/channel/"
+CHANNEL_EPISODE_URL = "http://api.android.zeeone.com/mobile/get/show_videos/"
+CHANNEL_SHOW_URL = "http://api.android.zeeone.com/mobile/get/show_video/"
+
+MOVIE_URL = "http://api.android.zeeone.com/mobile/get/movies/"
+MOVIE_SHOW_URL = "http://api.android.zeeone.com/mobile/get/movie/"
+
+BASE_URL = ""
 
 Channels = [
-    {'Name' : 'Zee Marathi', 'URL' : SHOW_URL + '/zeemarathi', 'icon_src':'http://akamai.vidz.zeecdn.com/ozee/asset/marathi.jpg', 'Type':'Channel'}, 
-    {'Name' : 'Zee TV', 'URL' : SHOW_URL + '/zeetv', 'icon_src':'http://akamai.vidz.zeecdn.com/ozee/asset/zeetv.jpg', 'Type':'Channel'},
-    {'Name' : '&TV', 'URL' : SHOW_URL + '/andtv', 'icon_src':'http://akamai.vidz.zeecdn.com/ozee/asset/andtv.jpg', 'Type':'Channel'},
-    {'Name' : 'Zindagi', 'URL' : SHOW_URL + '/zindagi', 'icon_src':'http://akamai.vidz.zeecdn.com/ozee/asset/zindagi.jpg', 'Type':'Channel'},
-    {'Name' : 'Movies', 'URL' : BASE_URL + '/movies/all', 'icon_src':'', 'Type':'MovieLanguage'}
+    {'Name' : 'Zee Marathi', 'URL' : CHANNEL_BASE_URL + '/zeemarathi/0/all', 'icon_src':'http://akamai.vidz.zeecdn.com/ozee/asset/marathi.jpg', 'Type':'Channel~shows'}, 
+    {'Name' : 'Zee TV', 'URL' : CHANNEL_BASE_URL + '/zeetv/0/all', 'icon_src':'http://akamai.vidz.zeecdn.com/ozee/asset/zeetv.jpg', 'Type':'Channel~shows'},
+    {'Name' : '&TV', 'URL' : CHANNEL_BASE_URL + '/andtv/0/all', 'icon_src':'http://akamai.vidz.zeecdn.com/ozee/asset/andtv.jpg', 'Type':'Channel~shows'},
+    {'Name' : 'Zindagi', 'URL' : CHANNEL_BASE_URL + '/zindagi/0/all', 'icon_src':'http://akamai.vidz.zeecdn.com/ozee/asset/zindagi.jpg', 'Type':'Channel~shows'},
+    {'Name' : 'Movies', 'URL' : BASE_URL + '/movies/all', 'icon_src':'', 'Type':'Channel~movies'}
     ]
 
 MoviesLanguages = [
-    {'Language' : 'Hindi', 'URL' : BASE_URL + '/movies/all/hindi'},
-    {'Language' : 'Marathi', 'URL' : BASE_URL + '/movies/all/marathi'}
+    {'Language' : 'Hindi', 'URL' : MOVIE_URL + '/0/50/hindi/all/'},
+    {'Language' : 'Marathi', 'URL' : MOVIE_URL + '/0/50/marathi/all/'}
     ]
 
 #Channels = json.loads(ChannelJSON)
 #MoviesLanguages = json.loads(MoviesJSON)
 
+# Serials
+# By Mode : , Main_Branch, Defined Mode : Channel
+# By Mode : Channel, show_serial, Defined Mode : episode
+
 def main_branch():
+    xbmc.log("Main_Branch")
     for Channel in Channels:
         xbmc.log(Channel['Name'])
-        h.add_dir(addon_handle, base_url, Channel["Name"], Channel["URL"], Channel["Type"])
-
-def movie_branch():
-    for Language in MoviesLanguages:
-        h.add_dir(addon_handle, base_url, Language["Language"], Language["URL"], "Movies")
-    
-
-#    h.add_dir(addon_handle, base_url, 'Zee Marathi', "http://www.ozee.com/shows/all/zeemarathi", 'Channel')
-#    h.add_dir(addon_handle, base_url, 'Zee TV', "http://www.ozee.com/shows/all/zeetv", 'Channel')
-#    h.add_dir(addon_handle, base_url, '& TV', "http://www.ozee.com/shows/all/andtv", 'Channel')
-#    h.add_dir(addon_handle, base_url, 'Zindagi', "http://www.ozee.com/shows/all/zindagi", 'Channel')
-#    h.add_dir(addon_handle, base_url, 'Movies', "http://www.ozee.com/movies/all", 'Movies')
+        h.add_dir(addon_handle, base_url, Channel["Name"], Channel["URL"], Channel["Type"], Channel["icon_src"], Channel["icon_src"])
 
 def shows_serials():
+    xbmc.log("Show_Serials")
     url = h.extract_var(args, 'url')
+    xbmc.log("URL : " + url) 
+    if param1 == "shows":
+        JSONObjs = json.loads(h.make_request(url, cookie_file, cookie_jar))
 
-    soup = BeautifulSoup(h.make_request(url, cookie_file, cookie_jar))
+        for JSONObj in JSONObjs:
+            title = JSONObj["title"]
+            img_src = JSONObj["listing_image_small"]
+            h.add_dir(addon_handle, base_url, title, JSONObj["slug"], "episodemenu", img_src, img_src)
+    else:
+        for Movie in MoviesLanguages:
+            xbmc.log(Movie["URL"])
+            h.add_dir(addon_handle, base_url, Movie["Language"], Movie["URL"], "Movies~0")
     
-    list = soup.findAll("div", {"class":"thumbnail-with-border-small-title clearfix"})
-
-    for div in list:
-        xbmc.log(div.find('a')["href"] + "/video")
-        title = div.find('div').find('span')["title"]
-        img_src = div.find('img')["src"]
-        h.add_dir(addon_handle, base_url, title, div.find('a')["href"] + "/video", 'episode', img_src, img_src)
-
-    pager = soup.find('ul', {'class': lambda x: x and 'pagination' in x.split()})
-    if pager is not None:
-        strPage = url.split("?page=")
-        if len(strPage) == 2:
-            nextPage = int(strPage[1]) + 1
-        else:
-            nextPage = 2
-        for pg in pager:
-            if (hasattr(pg, "text")) and (pg.text == str(nextPage)):
-                nextUrl = strPage[0] + "?page=" + str(nextPage)
-                xbmc.log("Adding Channel")
-                h.add_dir(addon_handle, base_url, 'Next >>', nextUrl, 'Channel')
-                break
-        h.add_dir(addon_handle, base_url, '<< Home >>', "", '')
-
-
 def shows_movies():
+    xbmc.log("Shows_Movies")
     url = h.extract_var(args, 'url')
-    xbmc.log("Movies URL : " + url)
-    soup = BeautifulSoup(h.make_request(url, cookie_file, cookie_jar))
+    xbmc.log("URL : " + url) 
+    JSONObjs = json.loads(h.make_request(url, cookie_file, cookie_jar))
+
+    for JSONObj in JSONObjs:
+        title = JSONObj["title"]
+        img_src = JSONObj["image_medium"]
+        h.add_dir(addon_handle, base_url, title, JSONObj["slug"], "Show_Movies", img_src, img_src)
+
+    currentDisplayCounter = int(param1)
+    if len(JSONObjs) >= 50 :
+        currentDisplayCounter = currentDisplayCounter + 50
+        h.add_dir(addon_handle, base_url, 'Next >>', h.extract_var(args, 'url'), 'Movies~' + param1 + '~' + str(currentDisplayCounter), img_src, img_src)
+    elif len(JSONObjs) < 50 :
+        currentDisplayCounter = -1
+
+def show_movies():
+    xbmc.log("Function : Show_Movies")
+
+    url = h.extract_var(args, 'url')
     
-    list = soup.findAll("div", {"class":"thumbnail-with-border-small-title clearfix"})
+    name = h.extract_var(args, 'name')
 
-    for div in list:
-        title = div.find('div').find('span')["title"]
-        img_src = div.find('img')["src"]
-        h.add_dir(addon_handle, base_url, title, div.find('a')["href"], 'play', img_src, img_src)
+    JSONObj = json.loads(h.make_request(MOVIE_SHOW_URL + url, cookie_file, cookie_jar))
 
-    pager = soup.find('ul', {'class': lambda x: x and 'pagination' in x.split()})
-    
-    if pager is not None:
-        strPage = url.split("?page=")
-        if len(strPage) == 2:
-            nextPage = int(strPage[1]) + 1
-        else:
-            nextPage = 2
-        for pg in pager:
-            if (hasattr(pg, "text")) and (pg.text == str(nextPage)):
-                nextUrl = strPage[0] + "?page=" + str(nextPage)
-                h.add_dir(addon_handle, base_url, 'Next >>', nextUrl, 'Movies')
-                break
-        h.add_dir(addon_handle, base_url, '<< Home >>', "", '')
+    thumbnail = JSONObj["details"]["listing_image_small"]
+    plot = JSONObj["details"]["seo_description"]
+    h.add_dir_video(addon_handle, JSONObj["details"]["title"], JSONObj["playback_url"], thumbnail, plot)
 
+def shows_serials_menu():
+    xbmc.log("Show_Serials_Menu")
+    url = h.extract_var(args, 'url')
+    xbmc.log("Serial URL : " + url)
+    h.add_dir(addon_handle, base_url, "Newest", url, 'episode~new~' + str(currentDisplayCounter))
+    h.add_dir(addon_handle, base_url, "Oldest", url, 'episode~old~' + str(currentDisplayCounter))
 
 def episode():
+    xbmc.log("Eposide")
     url = h.extract_var(args, 'url')
-    xbmc.log("URL : " + url)
-    soup = BeautifulSoup(h.make_request(url, cookie_file, cookie_jar))
-
-    list = soup.findAll("div", {"class":"col-md-3 col-xs-6 reduce-padding"})
-
-    for div in list:
-        xbmc.log("Title : " + div.find('img')['title'])
-        episode_url = div.find('a')["href"]
-        img_src = div.find('img')["src"]
-        h.add_dir(addon_handle, base_url, div.find('img')['title'], episode_url, 'show', img_src, img_src)
-
-    pager = soup.find('ul', {'class': lambda x: x and 'pagination' in x.split()})
+    xbmc.log("Eposide URL 1 : " + url)
     
-    if pager is not None:
-        strPage = url.split("?page=")
-        if len(strPage) == 2:
-            nextPage = int(strPage[1]) + 1
-        else:
-            nextPage = 2
-        for pg in pager:
-            if (hasattr(pg, "text")) and (pg.text == str(nextPage)):
-                nextUrl = strPage[0] + "?page=" + str(nextPage)
-                h.add_dir(addon_handle, base_url, 'Next >>', nextUrl, 'episode')
-                break
-        h.add_dir(addon_handle, base_url, '<< Home >>', "", '')
+    currentDisplayCounter = int(param2)
 
-def play_movie():
-    url = h.extract_var(args, 'url')
+    if param1 == "old":
+        url = CHANNEL_EPISODE_URL + url + "/" + str(currentDisplayCounter) + "/50/oldest/"
+    else:
+        url = CHANNEL_EPISODE_URL + url + "/" + str(currentDisplayCounter) + "/50/newest/"
 
-    xbmc.log("URL : " + url)
-    name = h.extract_var(args, 'name')
-	
-    soup = BeautifulSoup(h.make_request(url, cookie_file, cookie_jar))
-    
-    div = soup.find("div", {"id":"movie-container"})
+    xbmc.log("Episode URL 2 : " + url)
 
-    script = None
-    scripts = div.findAll("script")
+    JSONObjs = json.loads(h.make_request(url, cookie_file, cookie_jar))
 
-    for s in scripts:
-        if s.text.find('playbackurl = ') != -1:
-            script = s
-            break
-		
-    master_m3u8 = script.text.split('playbackurl = ')[1].split('\";')[0][1:]
+    for JSONObj in JSONObjs:
+        title = JSONObj["video_title"]
+        img_src = JSONObj["video_image"]
 
-    data = json.loads(soup.find('script', {'type': 'application/ld+json'}).text)
-    thumbnail = data["image"]
-    plot = data["description"]
-    h.add_dir_video(addon_handle, name, master_m3u8, thumbnail, plot)
+        h.add_dir(addon_handle, base_url, title, JSONObj["slug"], 'show', img_src, img_src)
+    if len(JSONObjs) >= 50 :
+        currentDisplayCounter = currentDisplayCounter + 50
+        h.add_dir(addon_handle, base_url, 'Next >>', h.extract_var(args, 'url'), 'episode~' + param1 + '~' + str(currentDisplayCounter), img_src, img_src)
+    elif len(JSONObjs) < 50 :
+        currentDisplayCounter = -1
+
 
 def show():
+    xbmc.log("Function : Show")
+
     url = h.extract_var(args, 'url')
-
-    xbmc.log("URL : " + url)
-    name = h.extract_var(args, 'name')
-	
-    soup = BeautifulSoup(h.make_request(url, cookie_file, cookie_jar))
     
-    div = soup.find("div", {"id":"episode-detail-page"})
+    xbmc.log("URL : " + CHANNEL_SHOW_URL + url)
+    name = h.extract_var(args, 'name')
 
-    script = None
-    scripts = div.findAll("script")
+    JSONObj = json.loads(h.make_request(CHANNEL_SHOW_URL + url, cookie_file, cookie_jar))
 
-    for s in scripts:
-        if s.text.find('playbackurl = ') != -1:
-            script = s
-            break
-		
-    master_m3u8 = script.text.split('playbackurl = ')[1].split('\";')[0][1:]
-
-    data = json.loads(soup.find('script', {'type': 'application/ld+json'}).text)
-	
-    thumbnail = data["video"]["thumbnailUrl"]
-    plot = data["video"]["description"]
-    h.add_dir_video(addon_handle, name, master_m3u8, thumbnail, plot)
+    thumbnail = JSONObj["listing_image_small"]
+    plot = JSONObj["description"]
+    h.add_dir_video(addon_handle, JSONObj["title"], JSONObj["playback_url"], thumbnail, plot)
 
 
 def not_implemented():
@@ -188,10 +152,25 @@ base_url = sys.argv[0]
 
 addon_handle = int(sys.argv[1])
 args = urlparse.parse_qs(sys.argv[2][1:])
-mode = args.get('mode', ['', ])[0]
+params = args.get('mode', ['', ])[0].split("~")
+
+
+param1 = ""
+param2 = ""
+
+mode = params[0]
+
+if len(params) >= 2:
+    param1 = params[1]
+if len(params) >= 3:
+    param2 = params[2]
+
+xbmc.log("Mode : " + mode)
 
 if mode == 'Channel':
     shows_serials()
+elif mode == 'episodemenu':
+    shows_serials_menu()
 elif mode == 'Movies':
     shows_movies()
 elif mode == 'show':
@@ -200,6 +179,8 @@ elif mode == 'play':
     play_movie()
 elif mode == 'episode':
     episode()
+elif mode == 'Show_Movies':
+    show_movies()
 elif mode == 'MovieLanguage':
     movie_branch()
 elif mode == 'not_implemented':
