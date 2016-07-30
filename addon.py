@@ -26,8 +26,6 @@ Channels = [
     {'Name' : 'Zee TV', 'URL' : CHANNEL_BASE_URL + '/zeetv/0/all', 'icon_src':'http://akamai.vidz.zeecdn.com/ozee/asset/zeetv.jpg', 'Type':'Channel~shows'},
     {'Name' : '&TV', 'URL' : CHANNEL_BASE_URL + '/andtv/0/all', 'icon_src':'http://akamai.vidz.zeecdn.com/ozee/asset/andtv.jpg', 'Type':'Channel~shows'},
     {'Name' : 'Zindagi', 'URL' : CHANNEL_BASE_URL + '/zindagi/0/all', 'icon_src':'http://akamai.vidz.zeecdn.com/ozee/asset/zindagi.jpg', 'Type':'Channel~shows'},
-    {'Name' : 'Movies', 'URL' : BASE_URL + '/movies/all', 'icon_src':'', 'Type':'Channel~movies'},
-    {'Name' : 'Music', 'URL' : BASE_URL + '/music/all', 'icon_src':'', 'Type':'Channel~music'},
     {'Name' : 'Zee Marathi', 'URL' : CHANNEL_BASE_URL + '/zeemarathi/0/all', 'icon_src':'http://akamai.vidz.zeecdn.com/ozee/asset/marathi.jpg', 'Type':'Channel~shows'}, 
     {'Name' : 'Zee Bangla', 'URL' : CHANNEL_BASE_URL + '/zeebangla/0/all', 'icon_src':'http://akamai.vidz.zeecdn.com/ozee/asset/bangla.jpg', 'Type':'Channel~shows'},
     {'Name' : 'Zee Telugu', 'URL' : CHANNEL_BASE_URL + '/zeetelugu/0/all', 'icon_src':'http://akamai.vidz.zeecdn.com/ozee/asset/telugu.jpg', 'Type':'Channel~shows'},
