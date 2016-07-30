@@ -1,5 +1,6 @@
 v2.0.1
  - Added Regional Languages Channels.
+ - Changes made for Kodi for Android
 v2.0.0
  - Added Movies channels.
 v0.0.1
