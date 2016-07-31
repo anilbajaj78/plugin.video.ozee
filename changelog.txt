@@ -1,5 +1,5 @@
 v2.0.1
- - Added Regional Languages Channels.
+ - Added Regional Languages Channels for Marathi, Tamil, Telugu, Bangla, Kannada.
 v2.0.0
  - Added Movies channels.
 v0.0.1
