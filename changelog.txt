@@ -1,5 +1,6 @@
 v2.0.1
  - Added Regional Languages Channels.
+ - Zee Marathi, Zee Telegu, Zee Tamil, Zee Bangla, Zee Kananada
 v2.0.0
  - Added Movies channels.
 v0.0.1
