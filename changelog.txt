@@ -1,3 +1,5 @@
+v2.1.0
+ - Added New Channels that is Big magic & Zee Classic.
 v2.0.1
  - Added Regional Languages Channels.
 v2.0.0
